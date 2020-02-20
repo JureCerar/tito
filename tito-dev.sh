@@ -16,11 +16,23 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 # Script version and date
-VERSION="0.2.2"
+VERSION="0.2.3"
 DATE="20 Feb 2020"
 
+# Changelog:
+# v0.2.3 -- 20 Feb 2020
+# - Fixed bug where `nodeUsage` would return to low value.
+#
+# v0.2.2 -- 12 Feb 2020
+# - Default `MAX_THREADS` is now nprocs on master node
+# - Added check if commands can be sent via SSH
+# - GNU screen is started on master node rather than slave.
+#
+# v0.2.1 and older
+# - ???
+
 # Variables
-NODE_LIST="/usr/local/bin/nodes" # Default node list
+NODE_LIST="/usr/local/bin/slaves" # Default node list
 ESC=$'\033'           # ACII escape
 TCOL=$(tput cols)     # screen width
 
@@ -32,14 +44,8 @@ KILL=                 # Enable killswitch
 LOGFILE=              # logfile
 WAIT_TIME=120.0       # Wait time if no new node is found
 
-# SSH overide
-function _ssh() {
-  ssh -n -o 'PreferredAuthentications=publickey' $@
-  return $?
-}
-
 # ---------------------------------------------------------------------------
-# Utility functions
+# Add some colors to your life
 
 # Set output color to red
 function red() {
@@ -60,15 +66,15 @@ function magenta() {
   return 0
 }
 
+# --------------------------------------------
+# Utility and pretty print  functions
+
 # Check if value us number
 function isNumber() {
   local REGX='^[+-]?[0-9]+([.][0-9]+)?$'
   [[ $1 =~ $REGX ]] || return 1
   return 0
 }
-
-# --------------------------------------------
-# STDOUT functions
 
 # Timestamp in format I like: "dd mmm yyyy hh:mm:ss"
 function timestamp() {
@@ -118,6 +124,12 @@ function submitOut() {
 # ---------------------------------------------------------------------------
 # Function definitions
 
+# SSH wrapper
+function _ssh() {
+  ssh -n -o 'PreferredAuthentications=publickey' $@
+  return $?
+}
+
 # Current node iterator
 # Use: nextNode
 CURR_NODE=0
@@ -140,7 +152,7 @@ function checkNodes() {
   local i NEW
   for i in "${!NODES[@]}"; do
     # Check if responsive and if command can be send via ssh.
-    ping -c 1 -W 1 "${NODES[$i]}" &>/dev/null && _ssh ${NODES[$i]} "echo ''" &>/dev/null
+    ping -c 1 -W 1 "${NODES[$i]}" &>/dev/null && _ssh ${NODES[$i]} "" &>/dev/null
     if [[ "$?" -eq 0 ]]; then
       NEW+=( ${NODES[$i]} )
     else
@@ -154,11 +166,15 @@ function checkNodes() {
 # Returns number of processes currently runing on node
 # Use: nodeUsage <node>
 function nodeUsage() {
-  local STRING CMD="grep 'procs_running' /proc/stat"
+  local RUNPROC AVGLOAD
   ping -c 1 -W 1 $1 &>/dev/null
   if [[ "$?" -eq 0 ]]; then
-    STRING=$( _ssh $1 "$CMD" )
-    awk '{print $2-1}' <<< "$STRING" # Subtract 1 for 'ssh & grep' commands that were called.
+    # Currently running processes on node. If request is trigered out of OpenMP region it can give wrong result.
+    RUNPROC=$( awk '{print $2-1}' <<< `_ssh $1 "grep 'procs_running' /proc/stat"` )
+    # Load average on node. If the processes is not fully utilizing CPU it can give wrong result.
+    AVGLOAD=$( awk '{printf "%d", $1+0.5 }' <<< `_ssh $1 "cat /proc/loadavg"` )
+    # Just use the higher of the values and you should be fine.
+    echo $RUNPROC $AVGLOAD | awk '{ if ($1>=$2) {print $1} else {print $2} }'
   else
     echo "-1"
   fi
@@ -235,7 +251,7 @@ while [[ $# -gt 0 ]]; do
     echo "OPTIONS:"
     echo " -h, --help       -- Print this message."
     echo " -v, --verbose    -- Verbose output."
-    echo " -n, --nthreads   -- Num. of threads per job. (${NTHREADS})"
+    echo " -n, --nthreads   -- Num. of threads per job [1-${MAX_THREADS}]. (${NTHREADS})"
     echo " -t, --time       -- Wait time when searching for free node [sec]. (${WAIT_TIME})"
     echo " -l, --log        -- Write submitted jobs to logfile. (${LOGFILE})"
     echo " --kill           -- Kill ALL jobs run by user on SELECTED nodes. (user: $(whoami))"
@@ -277,7 +293,7 @@ while [[ $# -gt 0 ]]; do
     shift ;;
   *)
     # Default option is node name + Expand option
-    NODES+=( $(eval echo $1) )
+    NODES+=( `eval echo $1` )
     shift ;;
   esac
 done
@@ -287,13 +303,12 @@ done
 command -v screen >/dev/null || errorOut "GNU screen not found on machine."
 
 # Sanity check for nthreads
-(( $MAX_THREADS-$NTHREADS < 0 )) && errorOut "Num. of requested thread(s) is larger than MAX num. of threads."
+(( $MAX_THREADS-$NTHREADS -lt 0 )) && errorOut "Num. of requested thread(s) is larger than MAX num. of threads."
 
 # If no nodes are provided, load default node list.
 if [[ -z "${NODES[@]}" ]]; then
   verboseOut "Loading default node list from: ${NODE_LIST}"
-  NODES=( $( cat "${NODE_LIST}" 2>/dev/null ) ) || errorOut "Node list file does not exist: ${NODE_LIST}"
-  NODES=( ${NODES[@]:1} ) # Remove master node
+  NODES=( `cat "${NODE_LIST}" 2>/dev/null` ) || errorOut "Node list file does not exist: ${NODE_LIST}"
 fi
 
 # Check node list and remove uresponsive nodes.

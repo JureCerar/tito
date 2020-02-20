@@ -2,7 +2,7 @@
 
 # FKKT __ti:to__ - Shell tool for submitting jobs to cluster network  
 
-![Version](https://img.shields.io/badge/Version-0.2.2-blue.svg)
+![Version](https://img.shields.io/badge/Version-0.2.3-blue.svg)
 [![Bash](https://img.shields.io/badge/Made_with-bash-light_green.svg)](https://www.gnu.org/software/bash/)
 [![License](https://img.shields.io/badge/License-GNU_GPL_v3.0-red.svg)](https://www.gnu.org/licenses/gpl-3.0.html)  
 
