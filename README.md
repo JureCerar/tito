@@ -2,7 +2,7 @@
 
 # FKKT __ti:to__ - Shell tool for submitting jobs to cluster network  
 
-![Version](https://img.shields.io/badge/Version-0.2.1-blue.svg)
+![Version](https://img.shields.io/badge/Version-0.2.2-blue.svg)
 [![Bash](https://img.shields.io/badge/Made_with-bash-light_green.svg)](https://www.gnu.org/software/bash/)
 [![License](https://img.shields.io/badge/License-GNU_GPL_v3.0-red.svg)](https://www.gnu.org/licenses/gpl-3.0.html)  
 
@@ -11,7 +11,7 @@
 
 FKKT __ti:to__ is a shell tool for submitting jobs to cluster networks.  
 
-A job can be a single command or a small script that you want to run. Jobs are submitted as single line of text. For each line of input, *FKKT ti:to* will submit command to a node on the cluster network with the line as argument. If no command is given, the line of input is executed.  
+A job can be a single command or a small script that you want to run. Jobs are submitted as single line of text. For each line of input, FKKT __ti:to__ will submit command to a node on the cluster network with the line as argument. If no command is given, the line of input is executed.  
 
 FKKT __ti:to__ makes sure that all jobs are efficiently submitted to cluster network by using all available node resources before occupying next node. If no free node is currently available, job submission will be halted until a nodes becomes available. In order to minimize impact on the node's performance the availability is checked only every _time_ seconds. Jobs are submitted to cluster nodes using [GNU screen](https://www.gnu.org/software/screen/) interactive shell, allowing user to reattach to given shell and check on the submitted job. Screen shell is automatically closed once the job is finished.  
 

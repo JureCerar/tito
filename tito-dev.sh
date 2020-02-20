@@ -16,7 +16,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 # Script version and date
-VERSION="0.2.1"
+VERSION="0.2.2"
 DATE="20 Feb 2020"
 
 # Variables
@@ -31,6 +31,12 @@ VERBOSE=              # Verbose output
 KILL=                 # Enable killswitch
 LOGFILE=              # logfile
 WAIT_TIME=120.0       # Wait time if no new node is found
+
+# SSH overide
+function _ssh() {
+  ssh -n -o 'PreferredAuthentications=publickey' $@
+  return $?
+}
 
 # ---------------------------------------------------------------------------
 # Utility functions
@@ -133,7 +139,8 @@ function currentNode() {
 function checkNodes() {
   local i NEW
   for i in "${!NODES[@]}"; do
-    ping -c 1 -W 1 "${NODES[$i]}" &>/dev/null
+    # Check if responsive and if command can be send via ssh.
+    ping -c 1 -W 1 "${NODES[$i]}" &>/dev/null && _ssh ${NODES[$i]} "echo ''" &>/dev/null
     if [[ "$?" -eq 0 ]]; then
       NEW+=( ${NODES[$i]} )
     else
@@ -150,8 +157,8 @@ function nodeUsage() {
   local STRING CMD="grep 'procs_running' /proc/stat"
   ping -c 1 -W 1 $1 &>/dev/null
   if [[ "$?" -eq 0 ]]; then
-    STRING=$( ssh -n -o 'PreferredAuthentications=publickey' $1 "$CMD" )
-	awk '{print $2-1}' <<< "$STRING" # Subtract 1 for 'ssh & grep' commands that were called.
+    STRING=$( _ssh $1 "$CMD" )
+    awk '{print $2-1}' <<< "$STRING" # Subtract 1 for 'ssh & grep' commands that were called.
   else
     echo "-1"
   fi
@@ -178,8 +185,8 @@ function killswitch() {
   for NODE in ${NODES[@]}; do
     ping -c 1 -W 1 $NODE &>/dev/null
     if [[ "$?" -eq 0 ]]; then
-			verboseOut "Killing jobs on node: $NODE"
-      ssh -n -o 'PreferredAuthentications=publickey' $NODE "$CMD" &>/dev/null &
+      verboseOut "Killing jobs on node: $NODE"
+      _ssh $NODE "$CMD" &>/dev/null &
     fi
   done
   return 0
@@ -334,7 +341,7 @@ FREE_THREADS=0
 titleOut "START TIME              NODE SHELL ID      COMMAND"
 for CMD in "${COMMANDS[@]}"; do
   # Can we fit current job to this node?
-	if [[ $FREE_THREADS-$NTHREADS -lt 0 ]]; then
+  if [[ $FREE_THREADS-$NTHREADS -lt 0 ]]; then
     # No; So cycle through nodes until we find free node ...
     while : ; do
       # Cycle once through node list
@@ -357,7 +364,7 @@ for CMD in "${COMMANDS[@]}"; do
       sleep $WAIT_TIME
 
     done
-	fi
+  fi
 
   # Generate shell ID
   SID=$( printf "tito.%0.3d" $CNT )
