@@ -95,7 +95,7 @@ When setting up FKKT __ti:to__ do not forget to edit default values in script he
 
 ## Acknowledgments
 Special thanks to:
-- Matjaz Simončič - for beta testing and witty comments.  
+- Matjaž Simončič - for beta testing and witty comments.  
 - Miha Lukšič - for beta testing and name suggestion.  
 
 ## License
