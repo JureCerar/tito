@@ -303,7 +303,7 @@ done
 command -v screen >/dev/null || errorOut "GNU screen not found on machine."
 
 # Sanity check for nthreads
-(( $MAX_THREADS-$NTHREADS -lt 0 )) && errorOut "Num. of requested thread(s) is larger than MAX num. of threads."
+[[ $MAX_THREADS-$NTHREADS -lt 0 ]] && errorOut "Num. of requested thread(s) is larger than MAX num. of threads."
 
 # If no nodes are provided, load default node list.
 if [[ -z "${NODES[@]}" ]]; then
