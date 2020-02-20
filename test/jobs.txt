@@ -1,0 +1,8 @@
+python test/stress.py 20
+python test/stress.py 20
+python test/stress.py 20
+python test/stress.py 20
+python test/stress.py 20
+python test/stress.py 20
+python test/stress.py 20
+python test/stress.py 20
