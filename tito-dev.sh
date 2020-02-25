@@ -66,6 +66,12 @@ function magenta() {
   return 0
 }
 
+# Underline test
+function uline() {
+  echo "${ESC}[4m$@${ESC}[0m"
+  return 0
+}
+
 # --------------------------------------------
 # Utility and pretty print  functions
 
@@ -246,7 +252,7 @@ while [[ $# -gt 0 ]]; do
     echo " FKKT ti:to only distributes jobs across nodes - it does NOT check if the "
     echo " submitted jobs work correctly. The latter is the responsibility of the user!"
     echo ""
-    echo " Check out https://github.com/JureCerar/tito for more information."
+    echo " Please visit $(uline "https://github.com/JureCerar/tito") for more information."
     echo ""
     echo "OPTIONS:"
     echo " -h, --help       -- Print this message."

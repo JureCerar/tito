@@ -22,8 +22,9 @@ FKKT __ti:to__ only distributes jobs across nodes - it does NOT check if the sub
 FKKT __ti:to__ works well with [FKKT kdo]() utility.
 
 ## Installing FKKT __ti:to__
-This is a script so no installation is needed, but out of continence `Makefile` is included.  
-For 'standard' installation, type the following as *root* (or *sudo*):
+This is a script so no installation is needed - Just make sure to make it executable with `chmod +x` and then run with `./tito-dev.sh`.  
+
+However, out of convenience `Makefile` is included. For 'standard' installation, type the following as *root* (or *sudo*):
 ```bash
 make install
 ```
@@ -76,7 +77,7 @@ screen -ls
 ```
 Note that when the job is finished the shell is automatically terminated.
 
-FKKT __ti:to__ has a build in kill switch in order to stop all currently submitted jobs:
+FKKT __ti:to__ has a build in kill switch in order to stop ALL currently submitted jobs:
 ```bash
 tito --kill
 tito --kill s2 s3
