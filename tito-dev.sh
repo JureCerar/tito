@@ -16,10 +16,13 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 # Script version and date
-VERSION="0.2.3"
-DATE="20 Feb 2020"
+VERSION="0.2.4"
+DATE="17 Jun 2020"
 
 # Changelog:
+# v0.2.4 -- 17 Jun 2020
+# - Fixed checking for running "tito.xxx" screen shells.
+#
 # v0.2.3 -- 20 Feb 2020
 # - Fixed bug where `nodeUsage` would return to low value.
 #
@@ -348,7 +351,7 @@ done
 # Start passing command to nodes
 
 # Initialize CNT counter: Find last remote shells that is currently running and continue counting from there.
-CNT=$( ls "/var/run/screen/S-$(whoami)" | grep -E 'tito.[0-9][0-9][0-9]' | tail -n 1 | cut -d'.' -f 3 )
+CNT=$( ls "/var/run/screen/S-$(whoami)" 2>/dev/null | grep -E 'tito.[0-9][0-9][0-9]' | cut -d'.' -f 3 | sort | tail -n 1 )
 if [[ -z "${CNT}" ]]; then
   let CNT=0
 else

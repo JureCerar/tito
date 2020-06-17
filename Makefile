@@ -17,4 +17,4 @@ install: $(SRC)
 	$(INSTALL) $(SRC) $(DIR)/$(APP)
 
 test: $(SRC)
-	./$(SRC) < test/jobs.txt
+	bash $(SRC) < test/jobs.txt
